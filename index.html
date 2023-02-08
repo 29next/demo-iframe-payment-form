@@ -76,7 +76,7 @@
             </form>
 
             <div class="my-4" style="display: none;" id="resultWrapper">
-                <div class="alert alert-success">Success! You can now use this token on the Admin API.</div>
+                <div class="alert alert-success">Success! Use this token on the Orders Admin API.</div>
                 <h4>Card Token</h4>
                 <code id="result"></code>
                 <div class="alert alert-info my-3">See browser console for full card token data.</div>
@@ -135,7 +135,9 @@
         });
 
         function submitPaymentForm() {
-            document.getElementById('resultWrapper').style.display = 'none'; // only for demo page, can ignore
+            // reset form when submit, only for demo page, can ignore
+            document.getElementById('resultWrapper').style.display = 'none';
+            document.getElementById("payment-error-block").innerHTML = '';
 
             // Get required, non-sensitive, values from host page
             var requiredFields = {};
@@ -144,7 +146,6 @@
             requiredFields["year"] = document.getElementById("year").value;
 
             Spreedly.tokenizeCreditCard(requiredFields);
-
         }
 
         Spreedly.on('errors', function (errors) {
