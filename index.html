@@ -19,9 +19,9 @@
         </header>
 
         <main>
-            <div class="alert alert-info">Submit the form below to test creating a card token.</div>
+            <div class="alert alert-primary">Submit the form below to test creating a card token.</div>
             <h4>Example Payment Form</h4>
-            <div id="spreedly-error-block"></div>
+            <div id="payment-error-block"></div>
             <form id="payment-form" onsubmit='submitPaymentForm(); return false;'>
                 <div class="mb-3">
                     <label for="exampleFormControlInput1" class="form-label">Cardholder Name</label>
@@ -75,9 +75,10 @@
             </form>
 
             <div class="my-4" style="display: none;" id="resultWrapper">
-                <div class="alert alert-info">You can now use this card token on the Admin API.</div>
+                <div class="alert alert-success">Success! You can now use this token on the Admin API.</div>
                 <h4>Card Token</h4>
                 <code id="result"></code>
+                <div class="alert alert-info my-3">See browser console for full card token data.</div>
             </div>
 
             <hr class="my-5">
@@ -111,24 +112,12 @@
 
         });
 
-        function submitPaymentForm() {
-             var requiredFields = {};
-
-            // Get required, non-sensitive, values from host page
-            requiredFields["full_name"] = document.getElementById("full_name").value;
-            requiredFields["month"] = document.getElementById("month").value;
-            requiredFields["year"] = document.getElementById("year").value;
-
-            Spreedly.tokenizeCreditCard(requiredFields);
-
-        }
-
         // styles for iframe field fonts to match
-        var style = 'color: #212529; font-size: 1rem; line-height: 1.5; \
+        var style = 'color: #212529; font-size: 1rem; line-height: 1.5; font-weight: 400; \
         width: calc(100% - 20px); height: calc(100% - 2px); position: absolute; \
-        font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"; \
-        font-weight: 400;';
+        font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";';
 
+        // Set placeholders and styles for
         Spreedly.on("ready", function () {
             Spreedly.setFieldType('text');
             Spreedly.setPlaceholder('cvv', "CVV");
@@ -136,13 +125,15 @@
             Spreedly.setNumberFormat('prettyFormat');
             Spreedly.setStyle('cvv', style);
             Spreedly.setStyle('number', style);
+
             submitBtn.removeAttribute('disabled');
         });
 
         function submitPaymentForm() {
-            var requiredFields = {};
-            document.getElementById('resultWrapper').style.display = 'none';
+            document.getElementById('resultWrapper').style.display = 'none'; // only for demo page, can ignore
+
             // Get required, non-sensitive, values from host page
+            var requiredFields = {};
             requiredFields["full_name"] = document.getElementById("full_name").value;
             requiredFields["month"] = document.getElementById("month").value;
             requiredFields["year"] = document.getElementById("year").value;
@@ -158,7 +149,7 @@
                 });
 
                 if (error_html) {
-                    document.getElementById("spreedly-error-block").innerHTML = `
+                    document.getElementById("payment-error-block").innerHTML = `
                     <div class="alert alert-danger">
                         ${error_html}
                     </div>
@@ -168,9 +159,11 @@
             });
 
         Spreedly.on('paymentMethod', function (token, pmData) {
-            // create your own handler to capture the card token and send it to your backend.
+            // only for demo page, create your own handler to capture the token
+            // and send to your backend.
             var result = document.getElementById('result').innerHTML = token;
             document.getElementById('resultWrapper').style.display = 'inherit';
+            console.log(pmData);
         });
     </script>
 </body>
