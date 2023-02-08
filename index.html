@@ -24,19 +24,20 @@
             <div id="payment-error-block"></div>
             <form id="payment-form" onsubmit='submitPaymentForm(); return false;'>
                 <div class="mb-3">
-                    <label for="exampleFormControlInput1" class="form-label">Cardholder Name</label>
-                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Name on Card">
-                </div>
-                <div class="mb-3">
-                    <label>Card Number</label>
+                    <label class="form-label">Card Number</label>
                     <div id="bankcard-number" class="form-control" style="height: 40px;"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="form-label">Cardholder Name</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Name on Card" autocomplete="cc-name">
                 </div>
 
                 <div class="mb-3 row">
                     <div class="col">
                         <label>Exp Month</label>
-                        <select class="form-select" id="month">
-                            <option>---</option>
+                        <select class="form-select" id="month" autocomplete="cc-exp-month">
+                            <option value="" disabled selected hidden>---</option>
                             <option value="1">01</option>
                             <option value="2">02</option>
                             <option value="3">03</option>
@@ -53,8 +54,8 @@
                     </div>
                     <div class="col">
                         <label>Exp Year</label>
-                        <select class="form-select" id="year">
-                            <option>---</option>
+                        <select class="form-select" id="year" autocomplete="cc-exp-year">
+                            <option value="" disabled selected hidden>---</option>
                             <option value="2023">2023</option>
                             <option value="2024">2024</option>
                             <option value="2025">2025</option>
@@ -110,10 +111,10 @@
 
         var submitBtn = document.getElementById("submit-button");
 
+        // Initialize Spreedly iframe with store environment key.
         Spreedly.init("ZVlbCiGPapQbN11W3tig4OOxhpg", {
             "numberEl": "bankcard-number",
             "cvvEl": "bankcard-cvv"
-
         });
 
         // styles for iframe field fonts to match
@@ -121,7 +122,7 @@
         width: calc(100% - 20px); height: calc(100% - 2px); position: absolute; \
         font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";';
 
-        // Set placeholders and styles for
+        // Set placeholders and styles for iframe fields
         Spreedly.on("ready", function () {
             Spreedly.setFieldType('text');
             Spreedly.setPlaceholder('cvv', "CVV");
@@ -163,10 +164,11 @@
             });
 
         Spreedly.on('paymentMethod', function (token, pmData) {
-            // only for demo page, create your own handler to capture the token
-            // and send to your backend.
+            // only for demo page, create your own handler to capture the token and send to your backend.
             var result = document.getElementById('result').innerHTML = token;
             document.getElementById('resultWrapper').style.display = 'inherit';
+
+            // log payment method data in console
             console.log(pmData);
         });
     </script>
