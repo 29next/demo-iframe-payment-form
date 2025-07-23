@@ -178,7 +178,7 @@
   </section>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
-  <script src="https://demo.29next.store/js/payment.js?env=6xZrSiBNS0fsn2GHI1zjrWrPWFw"></script>
+  <script src="https://demo.29next.store/js/v1/payment.js"></script>
   <script>
     new ClipboardJS('.clipboard', {
       text: trigger => trigger.textContent,
@@ -233,7 +233,7 @@
   <script>
     const submitButton = document.querySelector('#payment-form button[type="submit"]');
 
-    const payment = new NextPayment("6xZrSiBNS0fsn2GHI1zjrWrPWFw", {
+    const payment = new NextPayment({
       numberEl: "id_card_number",
       cvvEl: "id_card_cvv",
     });
