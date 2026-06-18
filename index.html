@@ -238,7 +238,7 @@
       cvvEl: "id_card_cvv",
     });
 
-    payment.onError = (errors, tokenized_error) => {
+    payment.onError = (error) => {
       // Clear previous validation states
       document.querySelectorAll('#payment-form .is-invalid').forEach(el => el.classList.remove('is-invalid'));
       let errorBlock = document.getElementById("payment-error-block");
@@ -246,39 +246,44 @@
 
 
       let errorHtml = '';
-      errors.forEach(error => {
-        // Handle errors that are related to specific fields
-        if (error.attribute === 'number') {
-          document.querySelector('#id_card_number').classList.add('is-invalid');
-          document.querySelector('#id_card_number + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'cvv') {
-          document.querySelector('#id_card_cvv').classList.add('is-invalid');
-          document.querySelector('#id_card_cvv + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'month') {
-          document.querySelector('#id_card_exp_month').classList.add('is-invalid');
-          document.querySelector('#id_card_exp_month + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'year') {
-          document.querySelector('#id_card_exp_year').classList.add('is-invalid');
-          document.querySelector('#id_card_exp_year + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'full_name') {
-          document.querySelector('#id_cardholder_name').classList.add('is-invalid');
-          document.querySelector('#id_cardholder_name + .invalid-feedback').textContent = error.message;
+      // once Spreedly fix error event payload for skd version 1.2.0
+      // we expect to get error info from message and errors object
+      if (error.message || error.errors){
+        if (error.errors && Array.isArray(error.errors)) {
+          // Validation errors (e.g., invalid card number, expired date)
+          error.errors.forEach(err => {
+            // Handle errors that are related to specific fields
+            if (err.attribute === 'number') {
+                document.querySelector('#id_card_number').classList.add('is-invalid');
+                document.querySelector('#id_card_number + .invalid-feedback').textContent = err.message;
+            }
+            else if (err.attribute === 'cvv') {
+              document.querySelector('#id_card_cvv').classList.add('is-invalid');
+              document.querySelector('#id_card_cvv + .invalid-feedback').textContent = err.message;
+            } else if (error.attribute === 'month') {
+              document.querySelector('#id_card_exp_month').classList.add('is-invalid');
+              document.querySelector('#id_card_exp_month + .invalid-feedback').textContent = err.message;
+            } else if (err.attribute === 'year') {
+              document.querySelector('#id_card_exp_year').classList.add('is-invalid');
+              document.querySelector('#id_card_exp_year + .invalid-feedback').textContent = err.message;
+            } else if (err.attribute === 'full_name') {
+              document.querySelector('#id_cardholder_name').classList.add('is-invalid');
+              document.querySelector('#id_cardholder_name + .invalid-feedback').textContent = err.message;
+            } else {
+              // Handle other errors that are not related to specific fields
+              errorHtml += `${err.message}<br/>`;
+            }
+          });
         } else {
-          // Handle other errors that are not related to specific fields
-          errorHtml += `<div>${error.message}</div>`
+          // General errors
+          errorHtml += `${error.message}<br/>`;
         }
-      });
-
-      if (tokenized_error) {
-        errorHtml += `<div>Please check your card details and try again.</div>`
-      } else {
-        submitButton.removeAttribute('disabled');
       }
-
+      else{
+          // Error not relate to validation
+          errorHtml = `${error.error??error}<br/>`;
+      }
+      submitButton.removeAttribute('disabled');
       if (errorHtml) {
         errorBlock.classList.remove('d-none');
         errorBlock.innerHTML = errorHtml;
@@ -292,13 +297,14 @@
       payment.setFocus("number");
     };
 
-    payment.onEvent = (fieldName, event, inputProperties) => {
-      const fieldEl = document.querySelector(`#id_card_${fieldName}`);
+    payment.onEvent = (payload) => {
+      const {action, field} = payload;
+      const fieldEl = document.querySelector(`#id_card_${field}`);
       if (!fieldEl) return;
-      if (event === "focus") {
+      if (action === "focus") {
         fieldEl.classList.add('active');
       } 
-      if (event === "blur") {
+      if (action === "blur") {
         fieldEl.classList.remove('active');
       }
     }
@@ -323,7 +329,7 @@
           year: year ? new Date().getFullYear().toString().substring(0, 2) + year : null
         };
 
-        const payment_method = await payment.tokenize(extraData);
+        const payment_method = await payment.tokenize(extraData, {});
 
         console.log('Payment Method Data:', payment_method);
 
