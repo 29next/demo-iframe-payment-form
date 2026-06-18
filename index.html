@@ -146,6 +146,12 @@
             <span class="text-result clipboard" id="fingerprint"></span>
           </div>
         </div>
+        <div class="mb-1">
+          <div>
+            <span class="small fw-medium">Metadata : </span>
+            <pre class="text-result clipboard" id="metadata" style="white-space: pre-wrap; word-break: break-all;"></pre>
+          </div>
+        </div>
         <p class="text-muted small mb-0 text-end">See browser console for full payment method data.</p>
       </div>
 
@@ -178,7 +184,7 @@
   </section>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
-  <script src="https://demo.29next.store/js/v1/payment.js"></script>
+  <script src="https://sandbox.anuwatwork.com/js/v1/payment.js"></script>
   <script>
     new ClipboardJS('.clipboard', {
       text: trigger => trigger.textContent,
@@ -260,7 +266,7 @@
             else if (err.attribute === 'cvv') {
               document.querySelector('#id_card_cvv').classList.add('is-invalid');
               document.querySelector('#id_card_cvv + .invalid-feedback').textContent = err.message;
-            } else if (error.attribute === 'month') {
+            } else if (err.attribute === 'month') {
               document.querySelector('#id_card_exp_month').classList.add('is-invalid');
               document.querySelector('#id_card_exp_month + .invalid-feedback').textContent = err.message;
             } else if (err.attribute === 'year') {
@@ -328,8 +334,13 @@
           month,
           year: year ? new Date().getFullYear().toString().substring(0, 2) + year : null
         };
-
-        const payment_method = await payment.tokenize(extraData, {});
+        const submitParams = {
+          metadata: {
+            //you metadata such as
+            order_id: 'ORDER-123' 
+          }
+        }
+        const payment_method = await payment.tokenize(extraData, submitParams);
 
         console.log('Payment Method Data:', payment_method);
 
@@ -340,6 +351,7 @@
         document.getElementById("last-four").textContent = payment_method.last_four_digits;
         document.getElementById("card-type").textContent = payment_method.card_type;
         document.getElementById("fingerprint").textContent = payment_method.fingerprint;
+        document.getElementById("metadata").textContent = JSON.stringify(payment_method.metadata, null, 2)
         document.getElementById("payment-result").classList.remove('d-none');
 
         // reset the submit button to its original text
