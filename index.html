@@ -146,6 +146,12 @@
             <span class="text-result clipboard" id="fingerprint"></span>
           </div>
         </div>
+        <div class="mb-1">
+          <div>
+            <span class="small fw-medium">Metadata : </span>
+            <pre class="text-result clipboard" id="metadata" style="white-space: pre-wrap; word-break: break-all;"></pre>
+          </div>
+        </div>
         <p class="text-muted small mb-0 text-end">See browser console for full payment method data.</p>
       </div>
 
@@ -238,47 +244,55 @@
       cvvEl: "id_card_cvv",
     });
 
-    payment.onError = (errors, tokenized_error) => {
-      // Clear previous validation states
+    function fieldSelectorForAttribute(attribute) {
+      if (attribute === 'number') return '#id_card_number';
+      if (attribute === 'cvv') return '#id_card_cvv';
+      if (attribute === 'month') return '#id_card_exp_month';
+      if (attribute === 'year') return '#id_card_exp_year';
+      if (attribute === 'full_name') return '#id_cardholder_name';
+      return null;
+    }
+
+    function setFieldInvalid(selector, message) {
+      let el = document.querySelector(selector);
+      if (!el) return;
+      el.classList.add('is-invalid');
+      let feedbackEl = document.querySelector(`${selector} + .invalid-feedback`);
+      if (feedbackEl) feedbackEl.textContent = message;
+    }
+
+    payment.onValidation = (payload) => {
       document.querySelectorAll('#payment-form .is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      (payload.errors || []).forEach(err => {
+        let selector = fieldSelectorForAttribute(err.attribute);
+        if (selector) setFieldInvalid(selector, err.message);
+      });
+    };
+
+    payment.onError = (error) => {
+      console.log('on error: ', error);
       let errorBlock = document.getElementById("payment-error-block");
       errorBlock.classList.add('d-none');
 
-
       let errorHtml = '';
-      errors.forEach(error => {
-        // Handle errors that are related to specific fields
-        if (error.attribute === 'number') {
-          document.querySelector('#id_card_number').classList.add('is-invalid');
-          document.querySelector('#id_card_number + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'cvv') {
-          document.querySelector('#id_card_cvv').classList.add('is-invalid');
-          document.querySelector('#id_card_cvv + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'month') {
-          document.querySelector('#id_card_exp_month').classList.add('is-invalid');
-          document.querySelector('#id_card_exp_month + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'year') {
-          document.querySelector('#id_card_exp_year').classList.add('is-invalid');
-          document.querySelector('#id_card_exp_year + .invalid-feedback').textContent = error.message;
-        }
-        else if (error.attribute === 'full_name') {
-          document.querySelector('#id_cardholder_name').classList.add('is-invalid');
-          document.querySelector('#id_cardholder_name + .invalid-feedback').textContent = error.message;
-        } else {
-          // Handle other errors that are not related to specific fields
-          errorHtml += `<div>${error.message}</div>`
-        }
-      });
-
-      if (tokenized_error) {
-        errorHtml += `<div>Please check your card details and try again.</div>`
+      if (typeof error === 'string') {
+        errorHtml = `${error}<br/>`;
+      } else if (error.errors && Array.isArray(error.errors)) {
+        error.errors.forEach(err => {
+          let selector = fieldSelectorForAttribute(err.attribute);
+          if (selector) {
+            setFieldInvalid(selector, err.message);
+          } else {
+            errorHtml += `${err.message}<br/>`;
+          }
+        });
+      } else if (error.message) {
+        errorHtml += `${error.message}<br/>`;
       } else {
-        submitButton.removeAttribute('disabled');
+        errorHtml = `${error}<br/>`;
       }
 
+      submitButton.removeAttribute('disabled');
       if (errorHtml) {
         errorBlock.classList.remove('d-none');
         errorBlock.innerHTML = errorHtml;
@@ -292,18 +306,40 @@
       payment.setFocus("number");
     };
 
-    payment.onEvent = (fieldName, event, inputProperties) => {
-      const fieldEl = document.querySelector(`#id_card_${fieldName}`);
+    payment.onFieldStateChange = (payload) => {
+      const {action, field} = payload;
+      const fieldEl = document.querySelector(`#id_card_${field}`);
       if (!fieldEl) return;
-      if (event === "focus") {
+      if (action === "focus") {
         fieldEl.classList.add('active');
-      } 
-      if (event === "blur") {
+      }
+      if (action === "blur") {
         fieldEl.classList.remove('active');
       }
     }
 
-    async function submitPaymentForm() {
+    // submit() fires the tokenization request and returns immediately — the
+    // result arrives later via onTokenized (success) or onError (failure).
+    payment.onTokenized = (result) => {
+      const payment_method = result.tokenResponse.payment_method;
+
+      console.log('Payment Method Data:', payment_method);
+
+      // Populate the result section with payment method details
+      document.getElementById("card-token").textContent = payment_method.token;
+      document.getElementById("card-number").textContent = payment_method.number;
+      document.getElementById("first-six").textContent = payment_method.first_six_digits;
+      document.getElementById("last-four").textContent = payment_method.last_four_digits;
+      document.getElementById("card-type").textContent = payment_method.card_type;
+      document.getElementById("fingerprint").textContent = payment_method.fingerprint;
+      document.getElementById("metadata").textContent = JSON.stringify(payment_method.metadata, null, 2)
+      document.getElementById("payment-result").classList.remove('d-none');
+
+      // reset the submit button to its original text
+      submitButton.textContent = submitButton.dataset.originalText || 'Pay Now';
+    };
+
+    function submitPaymentForm() {
       // Clear previous validation states
       document.querySelectorAll('#payment-form .is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
@@ -312,35 +348,23 @@
       submitButton.dataset.originalText = submitButton.textContent;
       submitButton.textContent = submitButton.dataset.loadingText || 'Processing...';
 
-      try {
-        let full_name = document.querySelector('#id_cardholder_name').value;
-        let month = document.querySelector('#id_card_exp_month').value;
-        let year = document.querySelector('#id_card_exp_year').value;
+      let full_name = document.querySelector('#id_cardholder_name').value;
+      let month = document.querySelector('#id_card_exp_month').value;
+      let year = document.querySelector('#id_card_exp_year').value;
 
-        const extraData = {
-          full_name,
-          month,
-          year: year ? new Date().getFullYear().toString().substring(0, 2) + year : null
-        };
-
-        const payment_method = await payment.tokenize(extraData);
-
-        console.log('Payment Method Data:', payment_method);
-
-        // Populate the result section with payment method details
-        document.getElementById("card-token").textContent = payment_method.token;
-        document.getElementById("card-number").textContent = payment_method.number;
-        document.getElementById("first-six").textContent = payment_method.first_six_digits;
-        document.getElementById("last-four").textContent = payment_method.last_four_digits;
-        document.getElementById("card-type").textContent = payment_method.card_type;
-        document.getElementById("fingerprint").textContent = payment_method.fingerprint;
-        document.getElementById("payment-result").classList.remove('d-none');
-
-        // reset the submit button to its original text
-        submitButton.textContent = submitButton.dataset.originalText || 'Pay Now';
-      } catch (err) {
-        console.error('Tokenize failed:', err);
+      const extraData = {
+        full_name,
+        month,
+        year: year ? new Date().getFullYear().toString().substring(0, 2) + year : null
+      };
+      const submitParams = {
+        metadata: {
+          //you metadata such as
+          order_id: 'ORDER-123'
+        }
       }
+
+      payment.submit(extraData, submitParams);
     };
   </script>
 </body>
