@@ -289,7 +289,7 @@
       } else if (error.message) {
         errorHtml += `${error.message}<br/>`;
       } else {
-        errorHtml = `${error.error??error}<br/>`;
+        errorHtml = `${error}<br/>`;
       }
 
       submitButton.removeAttribute('disabled');
