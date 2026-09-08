@@ -1,177 +1,405 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Demo iFrame Payment Form</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Next Payment Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      min-height: 100vh;
+    }
+
+    .payment-container {
+      max-width: 32rem;
+      background: white;
+      border-radius: 1rem;
+    }
+
+    #id_card_number,
+    #id_card_cvv {
+      height: 2.375rem;
+      padding: 0px;
+    }
+
+    .info-card {
+      background-color: #f8f9fa;
+      border-radius: 0.5rem;
+      padding: 1rem;
+    }
+
+    .text-result {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .form-control.active {
+      color: var(--bs-body-color);
+      background-color: var(--bs-body-bg);
+      border-color: #86b7fe;
+      outline: 0;
+      box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
+    }
+  </style>
 </head>
 
-<body>
-    <div class="col-lg-4 mx-auto p-4 py-md-5">
-        <header class="d-flex align-items-center mb-3 border-bottom">
-            <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-                <i class="bi bi-credit-card-2-front-fill me-3" style="font-size: 2rem;"></i>
-                <span class="fs-4">Demo iFrame Payment Form</span>
-            </a>
-        </header>
+<body class="d-flex align-items-center justify-content-center p-4">
 
-        <main>
-            <div class="alert alert-primary">Submit the form below to test creating a card token.</div>
-            <h4>Example Payment Form</h4>
-            <div id="payment-error-block"></div>
-            <form id="payment-form" onsubmit='submitPaymentForm(); return false;'>
-                <div class="mb-3">
-                    <label class="form-label">Card Number</label>
-                    <div id="bankcard-number" class="form-control" style="height: 40px;"></div>
-                </div>
+  <section>
+    <div class="payment-container p-4">
+      <h3 class="text-center fw-semibold mb-4">Demo Next Payment</h3>
 
-                <div class="mb-3">
-                    <label for="exampleFormControlInput1" class="form-label">Cardholder Name</label>
-                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Name on Card" autocomplete="cc-name">
-                </div>
+      <div class="alert alert-primary">Use the form below to create a test card token.</div>
 
-                <div class="mb-3 row">
-                    <div class="col">
-                        <label>Exp Month</label>
-                        <select class="form-select" id="month" autocomplete="cc-exp-month">
-                            <option value="" disabled selected hidden>---</option>
-                            <option value="1">01</option>
-                            <option value="2">02</option>
-                            <option value="3">03</option>
-                            <option value="4">04</option>
-                            <option value="5">05</option>
-                            <option value="6">06</option>
-                            <option value="7">07</option>
-                            <option value="8">08</option>
-                            <option value="9">09</option>
-                            <option value="10">10</option>
-                            <option value="11">11</option>
-                            <option value="12">12</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <label>Exp Year</label>
-                        <select class="form-select" id="year" autocomplete="cc-exp-year">
-                            <option value="" disabled selected hidden>---</option>
-                            <option value="2023">2023</option>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                            <option value="2028">2028</option>
-                            <option value="2029">2029</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <label>Security Code</label>
-                        <div id="bankcard-cvv" class="form-control" style="height: 40px;"></div>
-                    </div>
-                </div>
+      <div class="alert alert-danger d-none" id="payment-error-block"></div>
 
-                <input id="submit-button" class="btn w-100 btn-primary" type="submit" value="Pay Now" disabled>
+      <form id="payment-form" onsubmit='submitPaymentForm(); return false;' novalidate>
+        <div class="mb-3">
+          <label class="form-label fw-medium text-nowrap" for="id_card_number">Card Number</label>
+          <div class="position-relative">
+            <img id="id_card_type" class="position-absolute top-50 end-0 translate-middle-y me-2 pe-none d-none" height="24" alt="">
+            <div id="id_card_number" class="form-control"></div>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
 
-            </form>
+        <div class="mb-3">
+          <label class="form-label fw-medium text-nowrap" for="id_cardholder_name">Cardholder Name</label>
+          <input id="id_cardholder_name" name="cc-name" autocomplete="cc-name" type="text" placeholder="Full Name on Card"
+            class="form-control">
+          <div class="invalid-feedback"></div>
+        </div>
 
-            <div class="my-4" style="display: none;" id="resultWrapper">
-                <div class="alert alert-success">Success! You can now use this token on the Admin API.</div>
-                <h4>Card Token</h4>
-                <code id="result"></code>
-                <div class="alert alert-info my-3">See browser console for full card token data.</div>
-            </div>
+        <div class="row mb-3">
+          <div class="col-4">
+            <label class="form-label fw-medium text-nowrap" for="id_card_exp_month">Expiry Month</label>
+            <select id="id_card_exp_month" name="expiry_month" autocomplete="cc-exp-month" required class="form-select">
+              <option value="" selected disabled>MM</option>
+            </select>
+            <div class="invalid-feedback"></div>
+          </div>
 
-            <hr class="my-5">
+          <div class="col-4">
+            <label class="form-label fw-medium text-nowrap" for="id_card_exp_year">Expiry Year</label>
+            <select id="id_card_exp_year" name="expiry_year" autocomplete="cc-exp-year" required class="form-select">
+              <option value="" selected disabled>YYYY</option>
+            </select>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="col-4">
+            <label class="form-label fw-medium text-nowrap" for="id_card_cvv">Security Code</label>
+            <div id="id_card_cvv" class="form-control"></div>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
 
-            <h2>Test Data</h2>
-            <p>Use the example cards below with any <code>name</code>, <code>expiration</code> (future) and <code>cvv</code> to generate an example payment method token.</p>
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <td>Valid Card Number</td>
-                        <td>4111111111111111</td>
-                    </tr>
-                    <tr>
-                        <td>Invalid Card</td>
-                        <td>4223233232323233</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="my-5">
-                <a href="https://github.com/29next/demo-iframe-payment-form" target="_blank">View Source Code on Github <i
-                        class="bi bi-box-arrow-up-right"></i></a>
-            </div>
 
-        </main>
+        <button type="submit" data-loading-text="Processing..." class="btn btn-primary w-100 fw-medium" disabled>
+          Pay Now
+        </button>
+      </form>
+
+      <div class="info-card mt-4 d-none" id="payment-result">
+        <h5 class="h5 fw-medium mb-3">Payment Result</h5>
+        <p class="small text-muted mb-2">This token is used as a <code>card_token</code> payment method with the Orders
+          Admin API. Refer to the <a
+            href="https://developers.nextcommerce.com/docs/admin-api/guides/payment-methods/bankcard" target="_blank"
+            rel="noopener">Bankcard guide</a> for implementation details.</p>
+        <div class="mb-1">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">Card Token : </span>
+            <span class="text-result clipboard" id="card-token"></span>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">Card Number : </span>
+            <span class="text-result clipboard" id="card-number"></span>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">First Six Digits : </span>
+            <span class="text-result clipboard" id="first-six"></span>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">Last Four Digits : </span>
+            <span class="text-result clipboard" id="last-four"></span>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">Card Type : </span>
+            <span class="text-result clipboard" id="card-type"></span>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">Fingerprint : </span>
+            <span class="text-result clipboard" id="fingerprint"></span>
+          </div>
+        </div>
+        <p class="text-muted small mb-0 text-end">See browser console for full payment method data.</p>
+      </div>
+
+      <div class="info-card mt-4" id="test-data">
+        <h5 class="fw-medium mb-3">Test Data</h5>
+        <p class="small text-muted mb-2">Use the example card numbers below with any name, a future expiration date, and
+          a CVV to generate a test payment method token.</p>
+
+        <div class="mb-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">Valid Card Number : </span>
+            <span class="text-result clipboard">4111 1111 1111 1111</span>
+          </div>
+        </div>
+
+        <div class="mb-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small fw-medium">Invalid Card : </span>
+            <span class="text-result clipboard">4223 2332 3232 3233</span>
+          </div>
+        </div>
+
+      </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="https://core.spreedly.com/iframe/iframe-v1.min.js"></script>
-    <script>
+    <div class="text-end mt-3" style="height: 16px;">
+      <a class="github-button" href="https://github.com/NextCommerceCo/demo-iframe-payment-form"
+        data-color-scheme="no-preference: dark; light: dark; dark: dark;" data-size="large"
+        aria-label="Source Code NextCommerceCo/demo-iframe-payment-form on GitHub">Source Code</a>
+    </div>
+  </section>
 
-        var submitBtn = document.getElementById("submit-button");
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+  <script src="https://payments.29next.com/js/v1/payment.js?env_key=1o1MFKHBX0TCK28M2eszkRhmdHa"></script>
+  <script>
+    const clipboardHandlerSuccess = handleCopy('Copied!');
+    const clipboardHandlerError = handleCopy('Copy failed');
+    new ClipboardJS('.clipboard', {
+      text: trigger => trigger.textContent,
+      action: () => 'copy'
+    }).on('success', clipboardHandlerSuccess)
+      .on('error', clipboardHandlerError);
 
-        // Initialize Spreedly iframe with store environment key.
-        Spreedly.init("1o1MFKHBX0TCK28M2eszkRhmdHa", {
-            "numberEl": "bankcard-number",
-            "cvvEl": "bankcard-cvv"
+    function handleCopy(message) {
+      return function (e) {
+        e.clearSelection?.();
+
+        const el = e.trigger;
+        clearTimeout(el.timeoutId);
+
+        if (!el.originalText) el.originalText = el.textContent;
+
+        el.textContent = message;
+        el.timeoutId = setTimeout(() => {
+          el.textContent = el.originalText;
+          el.timeoutId = null;
+        }, 200);
+      };
+    }
+  </script>
+  <script>
+    // generate options for expiry month and year
+    const monthSelect = document.getElementById('id_card_exp_month');
+    const yearSelect = document.getElementById('id_card_exp_year');
+    const currentYear = new Date().getFullYear();
+    for (let i = 0; i < 10; i++) {
+      const option = document.createElement('option');
+      const year = (currentYear + i).toString();
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
+    }
+    for (let i = 1; i <= 12; i++) {
+      const option = document.createElement('option');
+      const month = i.toString().padStart(2, '0'); // Pad single digit months with leading zero
+      option.value = month;
+      option.textContent = month;
+      monthSelect.appendChild(option);
+    }
+  </script>
+  <script>
+    const submitButton = document.querySelector('#payment-form button[type="submit"]');
+
+    // Style the iframe field text to match Bootstrap .form-control
+    const formControlStyle = {
+      width: '100%',
+      padding: '.375rem .75rem',
+      fontSize: '1rem',
+      fontWeight: '400',
+      lineHeight: '1.5',
+      color: '#212529',
+      fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    };
+
+    const payment = new NextPayment({
+      numberEl: "id_card_number",
+      cvvEl: "id_card_cvv",
+      styling: {
+        number: { ...formControlStyle, paddingRight: '3rem' },
+        cvv: formControlStyle,
+        placeholder: { color: 'rgba(33, 37, 41, 0.75)' },
+      },
+    });
+
+    function fieldSelectorForAttribute(attribute) {
+      if (attribute === 'number') return '#id_card_number';
+      if (attribute === 'cvv') return '#id_card_cvv';
+      if (attribute === 'month') return '#id_card_exp_month';
+      if (attribute === 'year') return '#id_card_exp_year';
+      if (attribute === 'full_name') return '#id_cardholder_name';
+      return null;
+    }
+
+    function setFieldInvalid(selector, message) {
+      let el = document.querySelector(selector);
+      if (!el) return;
+      el.classList.add('is-invalid');
+      let feedbackEl = document.querySelector(`${selector} + .invalid-feedback`);
+      if (feedbackEl) feedbackEl.textContent = message;
+    }
+
+    payment.onValidation = (payload) => {
+      document.querySelectorAll('#payment-form .is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      (payload.errors || []).forEach(err => {
+        let selector = fieldSelectorForAttribute(err.attribute);
+        if (selector) setFieldInvalid(selector, err.message);
+      });
+
+      // reset submit button
+      submitButton.removeAttribute('disabled');
+      submitButton.textContent = submitButton.dataset.originalText || 'Pay Now';
+    };
+
+    payment.onError = (error) => {
+      console.log('on error: ', error);
+      let errorBlock = document.getElementById("payment-error-block");
+      errorBlock.classList.add('d-none');
+
+      let errorHtml = '';
+      if (typeof error === 'string') {
+        errorHtml = `${error}<br/>`;
+      } else if (error.errors && Array.isArray(error.errors)) {
+        error.errors.forEach(err => {
+          let selector = fieldSelectorForAttribute(err.attribute);
+          if (selector) {
+            setFieldInvalid(selector, err.message);
+          } else {
+            errorHtml += `${err.message}<br/>`;
+          }
         });
+      } else if (error.message) {
+        errorHtml += `${error.message}<br/>`;
+      } else {
+        errorHtml = `${error}<br/>`;
+      }
 
-        // styles for iframe field fonts to match
-        var style = 'color: #212529; font-size: 1rem; line-height: 1.5; font-weight: 400; \
-        width: calc(100% - 20px); height: calc(100% - 2px); position: absolute; \
-        font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";';
+      // reset submit button
+      submitButton.removeAttribute('disabled');
+      submitButton.textContent = submitButton.dataset.originalText || 'Pay Now';
+      
+      // show error message
+      if (errorHtml) {
+        errorBlock.classList.remove('d-none');
+        errorBlock.innerHTML = errorHtml;
+      }
+    };
 
-        // Set placeholders and styles for iframe fields
-        Spreedly.on("ready", function () {
-            Spreedly.setFieldType('text');
-            Spreedly.setPlaceholder('cvv', "CVV");
-            Spreedly.setPlaceholder('number', "Card Number");
-            Spreedly.setNumberFormat('prettyFormat');
-            Spreedly.setStyle('cvv', style);
-            Spreedly.setStyle('number', style);
+    payment.onReady = () => {
+      submitButton.removeAttribute('disabled');
+      payment.setFocus("number");
+    };
 
-            submitBtn.removeAttribute('disabled');
-        });
+    // card type detection: cardType is the SDK's card type key, 'unknown' until a brand matches
+    const cardTypeIcons = {
+      visa: 'img/cardbrands/visa.svg',
+      master: 'img/cardbrands/mastercard.svg',
+      american_express: 'img/cardbrands/amex.svg',
+      discover: 'img/cardbrands/discover.svg',
+      diners_club: 'img/cardbrands/diners_club.svg',
+      jcb: 'img/cardbrands/jcb.svg',
+      maestro: 'img/cardbrands/maestro.svg',
+      dankort: 'img/cardbrands/dankort.svg',
+    };
 
-        function submitPaymentForm() {
-            document.getElementById('resultWrapper').style.display = 'none'; // only for demo page, can ignore
+    payment.onFieldStateChange = (payload) => {
+      const {action, field, cardType} = payload;
 
-            // Get required, non-sensitive, values from host page
-            var requiredFields = {};
-            requiredFields["full_name"] = document.getElementById("full_name").value;
-            requiredFields["month"] = document.getElementById("month").value;
-            requiredFields["year"] = document.getElementById("year").value;
+      const cardTypeEl = document.getElementById('id_card_type');
+      if (cardTypeIcons[cardType]) {
+        cardTypeEl.src = cardTypeIcons[cardType];
+        cardTypeEl.classList.remove('d-none');
+      } else {
+        cardTypeEl.classList.add('d-none');
+      }
 
-            Spreedly.tokenizeCreditCard(requiredFields);
+      const fieldEl = document.querySelector(`#id_card_${field}`);
+      if (!fieldEl) return;
+      if (action === "focus") {
+        fieldEl.classList.add('active');
+      }
+      if (action === "blur") {
+        fieldEl.classList.remove('active');
+      }
+    }
 
-        }
+    // submit() fires the tokenization request and returns immediately — the
+    // result arrives later via onTokenized (success) or onError (failure).
+    payment.onTokenized = (result) => {
+      const payment_method = result.tokenResponse.payment_method;
 
-        Spreedly.on('errors', function (errors) {
-                var error_html = '';
-                errors.forEach(element => {
-                    error_html += `${element.message}<br/>`;
-                });
+      console.log('Payment Method Data:', payment_method);
 
-                if (error_html) {
-                    document.getElementById("payment-error-block").innerHTML = `
-                    <div class="alert alert-danger">
-                        ${error_html}
-                    </div>
-                `;
-                }
-                submitBtn.removeAttribute('disabled');
-            });
+      // Populate the result section with payment method details
+      document.getElementById("card-token").textContent = payment_method.token;
+      document.getElementById("card-number").textContent = payment_method.number;
+      document.getElementById("first-six").textContent = payment_method.first_six_digits;
+      document.getElementById("last-four").textContent = payment_method.last_four_digits;
+      document.getElementById("card-type").textContent = payment_method.card_type;
+      document.getElementById("fingerprint").textContent = payment_method.fingerprint;
+      document.getElementById("payment-result").classList.remove('d-none');
 
-        Spreedly.on('paymentMethod', function (token, pmData) {
-            // only for demo page, create your own handler to capture the token and send to your backend.
-            var result = document.getElementById('result').innerHTML = token;
-            document.getElementById('resultWrapper').style.display = 'inherit';
+      // reset the submit button to its original text
+      submitButton.textContent = submitButton.dataset.originalText || 'Pay Now';
+      submitButton.removeAttribute('disabled');
+    };
 
-            // log payment method data in console
-            console.log(pmData);
-        });
-    </script>
+    function submitPaymentForm() {
+      // Clear previous validation states
+      document.querySelectorAll('#payment-form .is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      // Clear error message
+      let errorBlock = document.getElementById("payment-error-block");
+      errorBlock.classList.add('d-none');
+      errorBlock.innerHTML = '';
+
+      // disable the submit button and show loading text
+      submitButton.setAttribute('disabled', true);
+      submitButton.dataset.originalText = submitButton.textContent;
+      submitButton.textContent = submitButton.dataset.loadingText || 'Processing...';
+
+      let full_name = document.querySelector('#id_cardholder_name').value;
+      let month = document.querySelector('#id_card_exp_month').value;
+      let year = document.querySelector('#id_card_exp_year').value;
+
+      const formData = {
+        full_name,
+        month,
+        year
+      };
+
+      payment.submit(formData);
+    };
+  </script>
 </body>
 
 </html>
